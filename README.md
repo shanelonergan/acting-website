@@ -30,14 +30,17 @@ The gallery tiles photos in CSS columns (two, three on large screens). Each keep
 
 ## Going live on shanelonergan.com
 
-The site deploys from GitHub `main` to the Netlify site `shanelonergan-preview`. The domain's DNS is already hosted by Netlify, but its records still point at Squarespace. To switch:
+The site deploys from GitHub `main` to the Netlify site `shanelonergan-preview`. The domain is registered with Squarespace, and its DNS is Squarespace's too. The `dnsX.p02.nsone.net` nameservers are Squarespace's DNS provider, not Netlify DNS. Its records still point at the old Squarespace site. To switch, keep DNS at Squarespace and repoint two records:
 
-1. In Netlify, open Domain management and add `shanelonergan.com`. Make `www.shanelonergan.com` the primary domain, to match `site.url` in [content/site.ts](content/site.ts).
-2. In Netlify DNS, delete the Squarespace records: the four A records, the `www` CNAME, and the `squarespacedns.com` NS records. Netlify then adds its own records and issues HTTPS.
-3. Send a test message through the contact form. If the Formspree form is restricted to certain domains, add the new one.
-4. Cancel the Squarespace website plan, but make sure the domain registration (renews July 2027) isn't cancelled with it.
+1. **Netlify:** go to Domain management, then Add a domain, and enter `www.shanelonergan.com`. Add `shanelonergan.com` too if Netlify doesn't offer it. Make `www.shanelonergan.com` the primary domain, to match `site.url` in [content/site.ts](content/site.ts). Netlify recommends www as primary when DNS is external. Don't set up Netlify DNS; the domain will show as awaiting external DNS until step 2.
+2. **Squarespace:** go to Domains, then `shanelonergan.com`, then DNS settings. Delete the Squarespace defaults: the four `@` A records (`198.185.159.x` / `198.49.23.x`) and the `www` CNAME to `ext-sq.squarespace.com`. If the domain is still connected to the Squarespace website, disconnect it first so the defaults don't come back. Then add:
+   - `A` record, host `@`, value `75.2.60.5`
+   - `CNAME` record, host `www`, value `shanelonergan-preview.netlify.app`
+3. **Wait and check:** changes usually show within an hour, occasionally longer. Netlify then verifies the domain and issues the HTTPS certificate on its own. If it doesn't, use "Verify DNS configuration" in Domain management.
+4. Send a test message through the contact form. If the Formspree form is restricted to certain domains, add the new one.
+5. Cancel the Squarespace website plan, but keep the domain registration (renews July 2027). It's a separate subscription.
 
-Redirects for the old site's pages live in [next.config.ts](next.config.ts).
+There's no email on the domain (no MX records), so nothing else needs moving. Redirects for the old site's pages live in [next.config.ts](next.config.ts).
 
 ## Instagram
 
