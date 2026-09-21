@@ -34,26 +34,44 @@ export function Contact() {
         gsap.set(content, { opacity: 1, y: 0 });
       });
 
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Panels start fully open (off-screen) and close inward.
-        gsap.set(panels, { scaleX: 0 });
-        gsap.set(content, { opacity: 0, y: 12 });
+      mm.add(
+        {
+          motionOk: "(prefers-reduced-motion: no-preference)",
+          isMobile: "(max-width: 767px)",
+        },
+        (context) => {
+          const { motionOk, isMobile } = context.conditions as { motionOk: boolean; isMobile: boolean };
+          if (!motionOk) return;
 
-        const tl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
-        tl.to(panels, { scaleX: 1, duration: 0.65, ease: "sine.inOut" }, 0);
-        // The details only resolve once the black has actually closed over.
-        tl.to(content, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 0.55);
+          // Panels start fully open (off-screen) and close inward.
+          gsap.set(panels, { scaleX: 0 });
+          gsap.set(content, { opacity: 0, y: 12 });
 
-        ScrollTrigger.create({
-          id: "contact-bookend",
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "top top",
-          scrub: 0.85,
-          invalidateOnRefresh: true,
-          animation: tl,
-        });
-      });
+          const tl = gsap.timeline({ paused: true, defaults: { ease: "none" } });
+          tl.to(panels, { scaleX: 1, duration: 0.65, ease: "sine.inOut" }, 0);
+          // Desktop: the details only resolve once the black has actually
+          // closed over. On phones that left nearly a screen of scrolling
+          // where the details were in view but still invisible, since the
+          // single column puts them near the top of a tall section. There
+          // they fade in as soon as they arrive (about 20–50% through a
+          // shorter range), and the scrub lags less.
+          tl.to(
+            content,
+            { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" },
+            isMobile ? 0.2 : 0.55,
+          );
+
+          ScrollTrigger.create({
+            id: "contact-bookend",
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: isMobile ? "top 30%" : "top top",
+            scrub: isMobile ? 0.4 : 0.85,
+            invalidateOnRefresh: true,
+            animation: tl,
+          });
+        },
+      );
 
       // gsap.matchMedia owns a context useGSAP does not revert — same as the
       // hero. Without this, StrictMode's double-invoke leaves a live trigger.
