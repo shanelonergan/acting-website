@@ -44,7 +44,7 @@ Credits, training, skills, vitals and the resume PDF now come from Shane's AEA r
 
 | What | Where | Note |
 |---|---|---|
-| **Run dates** | `content/productions.ts` | The resume carries no years, so no credit has `startDate`/`endDate`. Now Playing falls back to showing the top of the list under "Recently". The posters carry partial dates — Goodspeed *JCS* April 17 – June 7, Broadway Sacramento March 13–22, Cain Park *Rent* June 8–25 — but no years. Add full dates and Now Playing starts classifying properly. |
+| **Run dates** | `content/productions.ts` | The resume carries no years, so no credit has `startDate`/`endDate`. Now Playing falls back to a hand-picked "Recently" list: the credits with a `recentOrder`, lowest first (or the top of the array if none have one). The posters carry partial dates — Goodspeed *JCS* April 17 – June 7, Broadway Sacramento March 13–22, Cain Park *Rent* June 8–25 — but no years. Add full dates and Now Playing starts classifying properly. |
 | **"asst. John Kander"** | `content/productions.ts` → The Landing | Kept verbatim from the PDF; whether it means assistant *to* Kander isn't clear from the document. |
 | **Phone number** | `content/site.ts` → `phone` | On the resume, deliberately left off the page — a phone number in HTML gets scraped. It's still in the downloadable PDF. Set it only if you want it published as text. |
 

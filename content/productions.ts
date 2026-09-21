@@ -35,6 +35,12 @@ export type Production = {
   poster?: { src: string; width: number; height: number; alt: string };
   images?: { src: string; alt: string; credit?: string }[];
   featured?: boolean;
+  /**
+   * Position in Now Playing's "Recently" list (lowest first) while no credit
+   * has run dates. Lets that list be hand-picked without reordering this
+   * array, which would also reorder the resume. Ignored once dates exist.
+   */
+  recentOrder?: number;
 };
 
 export const productions: Production[] = [
@@ -46,6 +52,7 @@ export const productions: Production[] = [
     category: "theatre",
     company: "Goodspeed Musicals",
     poster: { src: "/images/posters/jcs-goodspeed.jpg", width: 399, height: 501, alt: "Goodspeed Musicals poster for Jesus Christ Superstar" },
+    recentOrder: 1,
     director: "Tatiana Pandiani",
   },
   {
@@ -54,6 +61,7 @@ export const productions: Production[] = [
     category: "theatre",
     company: "Broadway Sacramento",
     poster: { src: "/images/posters/jcs-sacramento.jpg", width: 399, height: 501, alt: "Broadway Sacramento poster for Jesus Christ Superstar" },
+    recentOrder: 3,
     director: "Glenn Casale",
   },
   {
@@ -63,6 +71,7 @@ export const productions: Production[] = [
     category: "theatre",
     company: "Asolo Rep",
     poster: { src: "/images/posters/jcs-asolo.jpg", width: 776, height: 1200, alt: "Asolo Rep poster for Jesus Christ Superstar" },
+    recentOrder: 4,
     city: "Sarasota, FL",
     director: "Josh Rhodes",
     choreographer: "Josh Rhodes",
@@ -165,6 +174,7 @@ export const productions: Production[] = [
     role: "The Painter",
     category: "concert",
     company: "29-hour reading",
+    recentOrder: 2,
     poster: {
       src: "/images/posters/cafe-berlin.jpg",
       width: 269,

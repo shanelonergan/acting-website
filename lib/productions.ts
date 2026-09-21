@@ -87,9 +87,18 @@ export function groupByRun(
   // With no dates anywhere the section would have nothing to show, and the
   // brief asks that it never look empty. The array is maintained
   // most-recent-first, so the top of it is the best available answer to
-  // "what has Shane been doing lately".
+  // "what has Shane been doing lately" — unless credits have been
+  // hand-picked with `recentOrder`, which wins (and isn't capped, since
+  // every pick was deliberate).
   if (nowPlaying.length === 0 && upcoming.length === 0 && recent.length === 0) {
-    return { nowPlaying: [], upcoming: [], recent: all.slice(0, recentLimit) };
+    const picked = all
+      .filter((p) => p.recentOrder !== undefined)
+      .sort((a, b) => a.recentOrder! - b.recentOrder!);
+    return {
+      nowPlaying: [],
+      upcoming: [],
+      recent: picked.length > 0 ? picked : all.slice(0, recentLimit),
+    };
   }
 
   return {

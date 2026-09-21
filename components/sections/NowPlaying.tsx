@@ -15,8 +15,8 @@ function Entry({ production, showTickets }: { production: Production; showTicket
           alt={production.poster.alt}
           width={production.poster.width}
           height={production.poster.height}
-          sizes="(max-width: 639px) 5rem, 7rem"
-          className="h-auto w-20 flex-none self-start sm:w-28"
+          sizes="(max-width: 639px) 6rem, 9rem"
+          className="h-auto w-24 flex-none self-start sm:w-36"
         />
       )}
       <div className="min-w-0">
