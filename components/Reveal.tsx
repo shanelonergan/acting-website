@@ -416,11 +416,17 @@ export function Reveal({ name, tagline, media, credit, framing }: RevealProps) {
           />
         </div>
 
-        {/* The seam of light, exactly centered in the gap between the names. */}
+        {/*
+          The seam of light, exactly centered in the gap between the names.
+          Starts invisible in the markup: its collapsed start state
+          (scaleY 0) is only applied once GSAP loads, so without this the
+          server-rendered page would flash it at full height on arrival.
+          The setup's gsap.set makes it opaque again, already collapsed.
+        */}
         <div
           ref={seamRef}
           aria-hidden
-          className="absolute inset-y-0 left-1/2 z-[4] w-px -translate-x-1/2 motion-reduce:hidden"
+          className="absolute inset-y-0 left-1/2 z-[4] w-px -translate-x-1/2 opacity-0 motion-reduce:hidden"
           style={{
             background:
               "linear-gradient(to bottom, rgba(255,214,170,0), rgba(255,214,170,.95) 28%, rgba(255,214,170,.95) 72%, rgba(255,214,170,0))",
