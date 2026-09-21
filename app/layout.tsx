@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
+import { HomeLink } from "@/components/HomeLink";
 import { SiteNav } from "@/components/SiteNav";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import "./globals.css";
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
+        <HomeLink />
         <SiteNav />
         <SmoothScroll />
         <main id="main-content">{children}</main>
