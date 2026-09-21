@@ -1,8 +1,9 @@
 import { Reveal } from "@/components/Reveal";
 import { NowPlaying } from "@/components/sections/NowPlaying";
 import { Resume } from "@/components/sections/Resume";
-import { ReelMusic } from "@/components/sections/ReelMusic";
+import { Reel } from "@/components/sections/Reel";
 import { Gallery } from "@/components/sections/Gallery";
+import { Music } from "@/components/sections/Music";
 import { Contact } from "@/components/sections/Contact";
 import { InstagramStrip } from "@/components/InstagramStrip";
 import { site, hero } from "@/content/site";
@@ -37,10 +38,11 @@ export default function Home() {
       <div id="next" />
       {/* About (bio + headshot) is cut for now; the reel leads instead. The
           component and site.bio are kept so it can come back. */}
-      <ReelMusic />
+      <Reel />
       <NowPlaying />
       <Resume />
       <Gallery />
+      <Music />
       {/* Renders nothing until the Instagram feed has posts. */}
       <InstagramStrip />
       <Contact />
