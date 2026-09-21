@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/*
+  The whole site is one dark theme, on purpose — it doesn't adapt to the
+  visitor's OS light/dark preference. Values are near-black rather than
+  pure #000 to avoid banding under the soft gradients used across the site.
+*/
+:root {
+  --bg: #0a0908;
+  --fg: #f3ead9;
+  --fg-muted: rgb(243 234 217 / 0.68);
+  --accent: #ffd6aa;
+
+  --ease-slow: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-section: 800ms;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-display);
+}
+
+html {
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-display), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a,
+button {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 100;
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  transition: top 200ms var(--ease-slow);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
+/*
+  The one transition language for everything outside the hero: a slow fade
+  with a small upward drift, once, on arrival. Driven by Section.tsx, which
+  only sets data-enter="pending" after confirming JS can animate it back —
+  so with no JS, or with reduced motion, content simply stays visible.
+*/
+.enter[data-enter="pending"] {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.enter[data-enter="in"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 800ms var(--ease-slow),
+    transform 800ms var(--ease-slow);
+}
+
+/*
+  The hero image's object-position. The phone crop is already composed around
+  Shane so it wants dead centre, while the wide original needs nudging to hold
+  him under the seam — and both values live in content/site.ts, so they arrive
+  as custom properties rather than as hard-coded classes.
+*/
+.hero-media {
+  object-position: var(--hero-op-mobile);
+}
+
+@media (min-width: 768px) {
+  .hero-media {
+    object-position: var(--hero-op-desktop);
+  }
+}
+
+/* The scroll cue's hairline: draws down, then retracts from the bottom. */
+@keyframes draw {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  50% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  51% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,71 @@
+# shanelonergan.com
+
+Custom site for Shane Lonergan — actor, director, musician. Next.js 16 (App Router) + TypeScript + Tailwind CSS v4, with a GSAP/ScrollTrigger-driven hero reveal. See the project brief for the full design spec.
+
+## Status: Phase 2 complete
+
+The hero reveal and the sections are built, each as both a home-page block and its own route. About is currently cut (see below). Phase 3 (reduced-motion pass on the new sections, image delivery, performance, axe audit, print stylesheet, SEO, redirects) is still to come.
+
+## Getting started
+
+Requires Node 24 LTS (pinned in `.nvmrc`). Netlify's Blobs/Functions packages need 22+, and the Netlify CLI needs 22.13+, so the whole toolchain — local dev, deploys, and the scheduled functions — now runs on one version.
+
+```bash
+nvm use
+npm install
+npm run dev
+```
+
+Open <http://localhost:3000>. Append `?debug` for ScrollTrigger markers and a manual scrub slider on the hero.
+
+## Adding a gallery photo
+
+```bash
+npm run gallery:add -- <slug> <source.jpg> [more.jpg ...]
+```
+
+Exports web-sized copies (2400px long edge) into `public/images/gallery` and prints entries to paste into [content/gallery.ts](content/gallery.ts). Originals are untouched.
+
+The gallery tiles photos in CSS columns (two, three on large screens). Each keeps its own aspect ratio — nothing is cropped — and because the dimensions are in the data, nothing shifts as photos load. Full captions, including the photographer, live in the lightbox.
+
+## Adding a production
+
+Edit [content/productions.ts](content/productions.ts) and add one `Production` entry. It will appear automatically in Now Playing (classified by its dates), in the Resume credits (grouped by `category`), and — if you give it `images` — in the gallery.
+
+Dates are optional and plain `YYYY-MM-DD` calendar dates. A credit without them still appears on the resume but is skipped by Now Playing; a run counts as "now playing" through the whole of its closing day.
+
+The array order is the resume order and is preserved for undated credits, so put new work at the top of its section.
+
+## Placeholders to replace
+
+Credits, training, skills, vitals and the resume PDF now come from Shane's AEA resume (`Shane MT Resume-9.pdf`) and are accurate. What's left:
+
+### Needs confirming
+
+| What | Where | Note |
+|---|---|---|
+| **Run dates** | `content/productions.ts` | The resume carries no years, so no credit has `startDate`/`endDate`. Now Playing falls back to showing the top of the list under "Recently". The posters carry partial dates — Goodspeed *JCS* April 17 – June 7, Broadway Sacramento March 13–22, Cain Park *Rent* June 8–25 — but no years. Add full dates and Now Playing starts classifying properly. |
+| **"asst. John Kander"** | `content/productions.ts` → The Landing | Kept verbatim from the PDF; whether it means assistant *to* Kander isn't clear from the document. |
+| **Phone number** | `content/site.ts` → `phone` | On the resume, deliberately left off the page — a phone number in HTML gets scraped. It's still in the downloadable PDF. Set it only if you want it published as text. |
+
+### Needs writing / supplying
+
+- **Bio / About** — cut from the page for now; the reel leads after the hero instead. `components/sections/About.tsx` and `site.bio` are kept so it can come back (re-add it to `app/page.tsx` and restore `app/about/page.tsx`). The bio's facts match the resume but the wording is still mine, not Shane's.
+- **Representation** — `site.representation` is `null`; Contact shows "to be confirmed".
+- **Headshots** — `public/images/headshots/`. Headshot 2 is current; Headshot 1 is an older file used as a stand-in.
+- **Gallery photographer credits** — `content/gallery.ts`. Credits were read from the copyright/author fields embedded in the original files (Adrian Van Stee, Colleen Albrecht, Steve Wagner, Patrick Murphy, John Seyfried) and should be confirmed before launch. The 54 Below shot has none yet; its filename points to Grace Copeland.
+- **Rent photo resolution** — those originals are only 1200px wide, so they're soft at full width on a retina screen. Worth asking Colleen Albrecht for larger files.
+- **Desktop hero resolution** — `public/images/hero/jcs-asolo.jpg` is 2048px wide, but a retina desktop asks next/image for 3840 and gets capped at 2048. Adrian's original is 8192x5464, so re-exporting the wide frame at ~3840px would fix it. (The phone crop is already cut from that master.)
+
+## Architecture notes
+
+- **`components/Reveal.tsx`** — the entire opening sequence. Self-contained; a `<video>` slots into its media wrapper without restructuring. The animation maths is commented at each call site; the name-fade timing in particular is *derived from geometry*, not taste — read the comment before changing the type size or `PANEL_TRAVEL`.
+- **`lib/productions.ts`** — all date classification, grouping, and formatting, as pure functions.
+- **`components/Section.tsx` + `.enter` in `globals.css`** — the one transition language used by every section.
+- **Two scrubbed timelines only**: the hero and the Contact bookend. Everything else is a CSS transition.
+- **`gsap.matchMedia()` needs an explicit `mm.revert()`** in the `useGSAP` cleanup — it owns a context `useGSAP` does not revert, and without it React StrictMode's double-invoke leaves duplicate pinned triggers. Both scrubbed components do this; copy the pattern if you add a third.
+- **Reduced motion is handled twice, deliberately.** Tailwind's `motion-reduce:` classes get the first paint right with no JS and no hydration flash; the JS gates (`gsap.matchMedia`, `lib/use-reduced-motion.ts`) prevent any scroll listener or pin from being created at all.
+
+## Known environment note
+
+This repo was developed through a disk-full incident that silently truncated several files to zero bytes without erroring (`tsconfig.json`, `eslint.config.mjs`, `.gitignore`, `app/favicon.ico`). All are restored. If a fresh clone ever behaves as though `tsconfig.json` or the ESLint config is being ignored — path aliases failing to resolve, unexpected JSX errors — check those files aren't empty before debugging application code.
