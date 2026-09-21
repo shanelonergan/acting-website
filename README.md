@@ -55,7 +55,6 @@ Credits, training, skills, vitals and the resume PDF now come from Shane's AEA r
 ### Needs writing / supplying
 
 - **Bio / About** — cut from the page for now; the reel leads after the hero instead. `components/sections/About.tsx` and `site.bio` are kept so it can come back (re-add it to `app/page.tsx` and restore `app/about/page.tsx`). The bio's facts match the resume but the wording is still mine, not Shane's.
-- **Representation** — `site.representation` is `null`; Contact shows "to be confirmed".
 - **Headshots** — `public/images/headshots/`. Headshot 2 is current; Headshot 1 is an older file used as a stand-in.
 - **Gallery photographer credits** — `content/gallery.ts`. Credits were read from the copyright/author fields embedded in the original files (Adrian Van Stee, Colleen Albrecht, Steve Wagner, Patrick Murphy, John Seyfried) and should be confirmed before launch. The 54 Below shot has none yet; its filename points to Grace Copeland.
 - **Rent photo resolution** — those originals are only 1200px wide, so they're soft at full width on a retina screen. Worth asking Colleen Albrecht for larger files.

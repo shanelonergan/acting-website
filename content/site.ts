@@ -26,8 +26,10 @@ export const site = {
     instagram: "https://instagram.com/shanelonergan",
     tiktok: "https://www.tiktok.com/@shane_lonergan",
   },
-  // PLACEHOLDER: confirm representation details.
-  representation: null as null | { agency: string; contact: string },
+  representation: { agency: "SW Artists", contact: "Margaret Emory" } as null | {
+    agency: string;
+    contact: string;
+  },
 
   // Not currently rendered: the About section is cut from the page for now
   // (see app/page.tsx). Kept so it can return. PLACEHOLDER wording — still
