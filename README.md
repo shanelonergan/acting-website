@@ -8,7 +8,7 @@ The hero reveal and the sections are built, each as both a home-page block and i
 
 ## Getting started
 
-Requires Node 24 LTS (pinned in `.nvmrc`). Netlify's Blobs/Functions packages need 22+, and the Netlify CLI needs 22.13+, so the whole toolchain — local dev, deploys, and the scheduled functions — now runs on one version.
+Requires Node 24 LTS (pinned in `.nvmrc`). The Netlify CLI needs 22.13+, so local dev and deploys run on one version.
 
 ```bash
 nvm use
@@ -27,6 +27,10 @@ npm run gallery:add -- <slug> <source.jpg> [more.jpg ...]
 Exports web-sized copies (2400px long edge) into `public/images/gallery` and prints entries to paste into [content/gallery.ts](content/gallery.ts). Originals are untouched.
 
 The gallery tiles photos in CSS columns (two, three on large screens). Each keeps its own aspect ratio — nothing is cropped — and because the dimensions are in the data, nothing shifts as photos load. Full captions, including the photographer, live in the lightbox.
+
+## Instagram
+
+The strip above Contact shows the latest six posts from a [Behold](https://behold.so) JSON feed (free plan: six posts, 1,200 feed requests a month). Set the feed URL as `BEHOLD_FEED_URL` in Netlify's environment variables, and in `.env.local` to see it locally; without it the strip renders nothing. The feed is fetched on the server and cached for six hours (`lib/instagram.ts`), so traffic never counts against Behold's limit.
 
 ## Adding a production
 

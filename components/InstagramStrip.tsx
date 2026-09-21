@@ -1,56 +1,25 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { useEnterOnView } from "@/lib/use-enter-on-view";
+import { Section } from "@/components/Section";
 import { site } from "@/content/site";
-import type { Feed, FeedPost } from "@/lib/instagram";
-
-/** Served by netlify/functions/instagram-feed.mts. */
-const FEED_URL = "/instagram/feed.json";
-/** Served by netlify/functions/instagram-image.mts, one image per post id. */
-const imageUrl = (id: string) => `/instagram/image/${id}`;
+import { getInstagramPosts } from "@/lib/instagram";
 
 const handle = site.socials.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
 
 /**
- * The eight most recent Instagram posts, linking out.
+ * A quiet row of the latest Instagram posts, linking out.
  *
  * Renders nothing at all until the feed has something in it — including
- * before Instagram is configured, during local development where the
- * Netlify functions aren't running, and if the request fails. The section
- * should never appear as an empty shell.
+ * when BEHOLD_FEED_URL isn't set (local development) and if Behold can't be
+ * reached. The section should never appear as an empty shell.
  *
- * Fetched on the client rather than at build time so new posts appear
- * without a redeploy. It sits near the bottom of the page, so it is not the
- * LCP element and its arrival shifts nothing above it.
+ * Fetched on the server and cached (see lib/instagram.ts), so new posts
+ * appear without a redeploy and visitors never hit Behold's view limit.
  */
-export function InstagramStrip() {
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const ref = useRef<HTMLElement>(null);
-  useEnterOnView(ref);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(FEED_URL, { signal: controller.signal })
-      .then((res) => (res.ok ? (res.json() as Promise<Feed>) : null))
-      .then((feed) => {
-        if (feed?.posts?.length) setPosts(feed.posts);
-      })
-      .catch(() => {
-        // Offline, blocked, or not configured — the strip simply stays away.
-      });
-    return () => controller.abort();
-  }, []);
-
+export async function InstagramStrip() {
+  const posts = await getInstagramPosts();
   if (posts.length === 0) return null;
 
   return (
-    <section
-      ref={ref}
-      aria-labelledby="instagram-heading"
-      className="enter px-6 pt-4 pb-24 sm:px-10 md:pb-32"
-    >
+    <Section labelledBy="instagram-heading" className="px-6 pt-4 pb-24 sm:px-10 md:pb-32">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <h2 id="instagram-heading" className="text-[12px] tracking-[0.2em] text-fg-muted uppercase">
@@ -64,10 +33,9 @@ export function InstagramStrip() {
           </a>
         </div>
 
-        {/* Four across at every width, so the eight posts the sync keeps
-            always make two full rows — three or six columns would leave a
-            ragged last row. */}
-        <ul className="mt-6 grid grid-cols-4 gap-2 sm:gap-3">
+        {/* Six posts (Behold's free-plan cap): two rows of three on phones,
+            one row of six from tablet up. */}
+        <ul className="mt-6 grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6">
           {posts.map((post) => (
             <li key={post.id}>
               <a
@@ -75,18 +43,23 @@ export function InstagramStrip() {
                 className="group relative block aspect-square overflow-hidden bg-black"
                 aria-label={post.alt}
               >
-                <Image
-                  src={imageUrl(post.id)}
+                {/* Behold already serves resized copies (400/700/1000px) from
+                    its CDN, so next/image would only re-process them. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.src}
+                  srcSet={post.srcSet || undefined}
+                  sizes="(max-width: 767px) 33vw, (max-width: 72rem) 17vw, 12rem"
                   alt=""
-                  fill
-                  sizes="(max-width: 72rem) 25vw, 18rem"
-                  className="object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100"
                 />
               </a>
             </li>
           ))}
         </ul>
       </div>
-    </section>
+    </Section>
   );
 }

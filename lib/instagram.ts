@@ -1,62 +1,81 @@
 /**
- * Pure helpers for the Instagram integration — no network, no storage, so
- * they can be tested directly. The Netlify functions in netlify/functions
- * supply the I/O.
+ * Recent Instagram posts, via a Behold (behold.so) JSON feed.
+ *
+ * Behold holds the Instagram connection and token, and serves resized copies
+ * of each image from its own CDN, so there is nothing here to rotate or
+ * re-host. The feed URL comes from the BEHOLD_FEED_URL environment variable;
+ * without it the strip simply renders nothing (e.g. in local development).
+ *
+ * Server-only: the free plan allows 1,200 feed requests a month and pauses
+ * the account past that, so the feed is fetched here and cached, never from
+ * the browser. See REVALIDATE_SECONDS.
  */
 
-export type InstagramMediaType = "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
+/**
+ * How long a fetched feed is reused before the next request refreshes it in
+ * the background (ISR). Every refresh is one Behold "view": six hours is at
+ * most ~120 a month, plus one per deploy. Behold's free plan only updates
+ * the feed once a day anyway.
+ */
+const REVALIDATE_SECONDS = 6 * 60 * 60;
 
-/** The subset of Instagram's media fields this site asks for. */
-export type InstagramMedia = {
+/** The free plan's cap; the strip's grid is laid out for exactly this many. */
+export const POST_COUNT = 6;
+
+type BeholdSize = { mediaUrl: string; width: number; height: number };
+
+type BeholdMediaType = "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
+
+/** The subset of Behold's post fields this site reads. */
+type BeholdPost = {
   id: string;
-  media_type: InstagramMediaType;
-  media_url?: string;
-  /** Videos expose a still here; media_url is the video file itself. */
-  thumbnail_url?: string;
   permalink: string;
-  caption?: string;
   timestamp: string;
-  children?: {
-    data: Array<{
-      media_type: InstagramMediaType;
-      media_url?: string;
-      thumbnail_url?: string;
-    }>;
-  };
+  mediaType: BeholdMediaType;
+  /** For videos this is the video file itself, never an image. */
+  mediaUrl?: string;
+  thumbnailUrl?: string;
+  caption?: string;
+  /** Instagram's own alt text, when the post has one. */
+  altText?: string;
+  sizes?: Partial<Record<"small" | "medium" | "large" | "full", BeholdSize>>;
+  children?: Array<{ mediaType: BeholdMediaType; mediaUrl?: string }>;
 };
 
-/** What the site actually renders. Deliberately excludes anything private. */
+/** What the strip renders. */
 export type FeedPost = {
   id: string;
   permalink: string;
   alt: string;
-  timestamp: string;
-};
-
-export type Feed = {
-  posts: FeedPost[];
-  updatedAt: string;
+  src: string;
+  /** Behold's resized copies, when present; empty means `src` is all there is. */
+  srcSet: string;
 };
 
 /**
- * The still image to show for a post.
- *
- * Videos and reels have to use `thumbnail_url` — their `media_url` is an MP4.
- * A carousel's own `media_url` is its first item, which may itself be a video,
- * so prefer the first child that is a real image.
+ * Behold's pre-sized images (400, 700, 1000px). The strip's tiles are never
+ * wider than ~18rem, so `full` (2000px) is never worth sending.
  */
-export function displayImageUrl(media: InstagramMedia): string | null {
-  if (media.media_type === "VIDEO") return media.thumbnail_url ?? null;
+function srcSetFor(post: BeholdPost): string {
+  return (["small", "medium", "large"] as const)
+    .map((key) => post.sizes?.[key])
+    .filter((size): size is BeholdSize => Boolean(size?.mediaUrl))
+    .map((size) => `${size.mediaUrl} ${size.width}w`)
+    .join(", ");
+}
 
-  if (media.media_type === "CAROUSEL_ALBUM") {
-    const children = media.children?.data ?? [];
-    const firstImage = children.find((child) => child.media_type === "IMAGE" && child.media_url);
-    if (firstImage?.media_url) return firstImage.media_url;
-    const firstThumb = children.find((child) => child.thumbnail_url);
-    if (firstThumb?.thumbnail_url) return firstThumb.thumbnail_url;
+/**
+ * A still image for the post, or null if it has none. A video's `mediaUrl`
+ * is an MP4, so videos fall back to their thumbnail; a carousel falls back
+ * to its first child that is an image.
+ */
+function fallbackImageFor(post: BeholdPost): string | null {
+  if (post.mediaType === "VIDEO") return post.thumbnailUrl ?? null;
+  if (post.mediaType === "CAROUSEL_ALBUM") {
+    const firstImage = post.children?.find((child) => child.mediaType === "IMAGE" && child.mediaUrl);
+    if (firstImage?.mediaUrl) return firstImage.mediaUrl;
   }
-
-  return media.media_url ?? media.thumbnail_url ?? null;
+  return post.mediaUrl ?? post.thumbnailUrl ?? null;
 }
 
 const MONTHS = [
@@ -69,8 +88,11 @@ const MONTHS = [
  * URLs removed, since a wall of tags read aloud is worse than nothing. Falls
  * back to the month and year, which at least locates the post in time.
  */
-export function altTextFor(media: InstagramMedia, maxLength = 120): string {
-  const firstLine = (media.caption ?? "").split("\n")[0] ?? "";
+export function altTextFor(
+  post: Pick<BeholdPost, "caption" | "timestamp">,
+  maxLength = 120,
+): string {
+  const firstLine = (post.caption ?? "").split("\n")[0] ?? "";
   const cleaned = firstLine
     .replace(/https?:\/\/\S+/g, "")
     .replace(/[#@][\p{L}\p{N}_.]+/gu, "")
@@ -88,43 +110,48 @@ export function altTextFor(media: InstagramMedia, maxLength = 120): string {
     return `${clipped.slice(0, breakPoint).trimEnd()}…`;
   }
 
-  const date = new Date(media.timestamp);
+  const date = new Date(post.timestamp);
   if (Number.isNaN(date.getTime())) return "Instagram post";
   return `Instagram post from ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 
-/** Turns an API response into what gets stored and served. */
-export function toFeedPosts(media: InstagramMedia[], limit: number): FeedPost[] {
-  return media
-    .filter((item) => displayImageUrl(item) !== null)
-    .slice(0, limit)
-    .map((item) => ({
-      id: item.id,
-      permalink: item.permalink,
-      alt: altTextFor(item),
-      timestamp: item.timestamp,
-    }));
+/** Turns Behold's posts into what the strip renders, dropping any without an image. */
+export function toFeedPosts(posts: BeholdPost[], limit = POST_COUNT): FeedPost[] {
+  const result: FeedPost[] = [];
+  for (const post of posts) {
+    if (result.length === limit) break;
+    const srcSet = srcSetFor(post);
+    const src = post.sizes?.medium?.mediaUrl ?? fallbackImageFor(post);
+    if (!src) continue;
+    result.push({
+      id: post.id,
+      permalink: post.permalink,
+      alt: post.altText?.trim() || altTextFor(post),
+      src,
+      srcSet,
+    });
+  }
+  return result;
 }
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Long-lived tokens last 60 days and can only be refreshed once they're at
- * least 24 hours old. Refreshing weekly keeps a wide margin: the token would
- * have to go un-refreshed for over eight weeks to expire, and a refresh
- * returns a new token string that must be stored, so this never mutates in
- * place.
+ * The latest posts, or an empty list if the feed isn't configured or can't
+ * be reached — the strip should disappear, never break the home page.
  */
-export function shouldRefreshToken(refreshedAt: string | null, now: Date = new Date()): boolean {
-  if (!refreshedAt) return true;
-  const last = new Date(refreshedAt);
-  if (Number.isNaN(last.getTime())) return true;
-  return now.getTime() - last.getTime() >= 7 * DAY_MS;
-}
+export async function getInstagramPosts(): Promise<FeedPost[]> {
+  const url = process.env.BEHOLD_FEED_URL;
+  if (!url) return [];
 
-/** Blob keys, in one place so the sync and serving functions can't drift. */
-export const BLOB_STORE = "instagram";
-export const FEED_KEY = "feed";
-export const TOKEN_KEY = "token";
-export const TOKEN_REFRESHED_AT_KEY = "token-refreshed-at";
-export const imageKey = (id: string) => `img/${id}`;
+  try {
+    const res = await fetch(url, { next: { revalidate: REVALIDATE_SECONDS } });
+    if (!res.ok) {
+      console.warn(`instagram: Behold feed returned ${res.status}`);
+      return [];
+    }
+    const feed = (await res.json()) as { posts?: BeholdPost[] };
+    return toFeedPosts(feed.posts ?? []);
+  } catch (error) {
+    console.warn("instagram: could not fetch the Behold feed", error);
+    return [];
+  }
+}
