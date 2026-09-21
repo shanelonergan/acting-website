@@ -4,7 +4,7 @@ Custom site for Shane Lonergan — actor, director, musician. Next.js 16 (App Ro
 
 ## Status: Phase 2 complete
 
-The hero reveal and the sections are built, each as both a home-page block and its own route. About is currently cut (see below). Phase 3 (reduced-motion pass on the new sections, image delivery, performance, axe audit, print stylesheet, SEO, redirects) is still to come.
+The hero reveal and the sections are built, each as both a home-page block and its own route. About is currently cut (see below). Page titles, link previews, a sitemap, robots.txt and redirects from the old Squarespace pages are in. Still to come from Phase 3: a reduced-motion pass on the new sections, image delivery, performance, an axe audit and a print stylesheet.
 
 ## Getting started
 
@@ -27,6 +27,17 @@ npm run gallery:add -- <slug> <source.jpg> [more.jpg ...]
 Exports web-sized copies (2400px long edge) into `public/images/gallery` and prints entries to paste into [content/gallery.ts](content/gallery.ts). Originals are untouched.
 
 The gallery tiles photos in CSS columns (two, three on large screens). Each keeps its own aspect ratio — nothing is cropped — and because the dimensions are in the data, nothing shifts as photos load. Full captions, including the photographer, live in the lightbox.
+
+## Going live on shanelonergan.com
+
+The site deploys from GitHub `main` to the Netlify site `shanelonergan-preview`. The domain's DNS is already hosted by Netlify, but its records still point at Squarespace. To switch:
+
+1. In Netlify, open Domain management and add `shanelonergan.com`. Make `www.shanelonergan.com` the primary domain, to match `site.url` in [content/site.ts](content/site.ts).
+2. In Netlify DNS, delete the Squarespace records: the four A records, the `www` CNAME, and the `squarespacedns.com` NS records. Netlify then adds its own records and issues HTTPS.
+3. Send a test message through the contact form. If the Formspree form is restricted to certain domains, add the new one.
+4. Cancel the Squarespace website plan, but make sure the domain registration (renews July 2027) isn't cancelled with it.
+
+Redirects for the old site's pages live in [next.config.ts](next.config.ts).
 
 ## Instagram
 
@@ -54,7 +65,7 @@ Credits, training, skills, vitals and the resume PDF now come from Shane's AEA r
 
 ### Needs writing / supplying
 
-- **Bio / About** — cut from the page for now; the reel leads after the hero instead. `components/sections/About.tsx` and `site.bio` are kept so it can come back (re-add it to `app/page.tsx` and restore `app/about/page.tsx`). The bio's facts match the resume but the wording is still mine, not Shane's.
+- **Bio / About** — cut from the page for now; the reel leads after the hero instead. `components/sections/About.tsx` and `site.bio` are kept so it can come back (re-add it to `app/page.tsx`, restore `app/about/page.tsx`, and delete the `/about` redirect in `next.config.ts`, which would otherwise shadow it). The bio's facts match the resume but the wording is still mine, not Shane's.
 - **Headshots** — `public/images/headshots/`. Headshot 2 is current; Headshot 1 is an older file used as a stand-in.
 - **Gallery photographer credits** — `content/gallery.ts`. Credits were read from the copyright/author fields embedded in the original files (Adrian Van Stee, Colleen Albrecht, Steve Wagner, Patrick Murphy, John Seyfried) and should be confirmed before launch. The 54 Below shot has none yet; its filename points to Grace Copeland.
 - **Rent photo resolution** — those originals are only 1200px wide, so they're soft at full width on a retina screen. Worth asking Colleen Albrecht for larger files.
@@ -62,7 +73,8 @@ Credits, training, skills, vitals and the resume PDF now come from Shane's AEA r
 
 ## Architecture notes
 
-- **`components/Reveal.tsx`** — the entire opening sequence. Self-contained; a `<video>` slots into its media wrapper without restructuring. The animation maths is commented at each call site; the name-fade timing in particular is *derived from geometry*, not taste — read the comment before changing the type size or `PANEL_TRAVEL`.
+- **`components/Reveal.tsx`** — the entire opening sequence. Self-contained; a `<video>` slots into its media wrapper without restructuring. The animation maths is commented at each call site; the name-fade timing in particular is *derived from geometry*, not taste — read the comment before changing the name's size or `PANEL_TRAVEL`.
+- **`components/BulbWord.tsx` + `lib/bulb-font.ts`** — the hero name as a marquee sign. The alphabet is hand-drawn as single-stroke centrelines, covering only the letters in the name, so a different name needs new glyphs. Bulb coordinates are rounded so server and client markup match.
 - **`lib/productions.ts`** — all date classification, grouping, and formatting, as pure functions.
 - **`components/Section.tsx` + `.enter` in `globals.css`** — the one transition language used by every section.
 - **Two scrubbed timelines only**: the hero and the Contact bookend. Everything else is a CSS transition.

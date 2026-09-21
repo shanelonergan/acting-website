@@ -8,6 +8,10 @@
 
 export const site = {
   name: "Shane Lonergan",
+  // The canonical address: link previews, the sitemap and robots.txt are
+  // built from it. www because that's the form search engines already have
+  // from the old Squarespace site; make it the primary domain in Netlify too.
+  url: "https://www.shanelonergan.com",
   tagline: "actor · director · musician",
   // From Shane's AEA resume — the professional address, not his personal one.
   email: "shanepatricklonergan@gmail.com",
