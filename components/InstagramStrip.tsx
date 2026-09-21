@@ -14,7 +14,7 @@ const imageUrl = (id: string) => `/instagram/image/${id}`;
 const handle = site.socials.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
 
 /**
- * A quiet row of recent Instagram posts, linking out.
+ * The eight most recent Instagram posts, linking out.
  *
  * Renders nothing at all until the feed has something in it — including
  * before Instagram is configured, during local development where the
@@ -64,7 +64,10 @@ export function InstagramStrip() {
           </a>
         </div>
 
-        <ul className="mt-6 grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6">
+        {/* Four across at every width, so the eight posts the sync keeps
+            always make two full rows — three or six columns would leave a
+            ragged last row. */}
+        <ul className="mt-6 grid grid-cols-4 gap-2 sm:gap-3">
           {posts.map((post) => (
             <li key={post.id}>
               <a
@@ -76,7 +79,7 @@ export function InstagramStrip() {
                   src={imageUrl(post.id)}
                   alt=""
                   fill
-                  sizes="(max-width: 767px) 33vw, 12rem"
+                  sizes="(max-width: 72rem) 25vw, 18rem"
                   className="object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100"
                 />
               </a>

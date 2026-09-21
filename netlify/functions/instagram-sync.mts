@@ -13,7 +13,7 @@ import {
   type InstagramMedia,
 } from "../../lib/instagram";
 
-const POST_LIMIT = 6;
+const POST_LIMIT = 8;
 const FIELDS =
   "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp,children{media_type,media_url,thumbnail_url}";
 
