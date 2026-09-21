@@ -5,7 +5,7 @@ import { getInstagramPosts } from "@/lib/instagram";
 const handle = site.socials.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
 
 /**
- * A quiet row of the latest Instagram posts, linking out.
+ * The latest Instagram posts as a small grid, linking out.
  *
  * Renders nothing at all until the feed has something in it — including
  * when BEHOLD_FEED_URL isn't set (local development) and if Behold can't be
@@ -20,7 +20,7 @@ export async function InstagramStrip() {
 
   return (
     <Section labelledBy="instagram-heading" className="px-6 pt-4 pb-24 sm:px-10 md:pb-32">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <h2 id="instagram-heading" className="text-[12px] tracking-[0.2em] text-fg-muted uppercase">
             Instagram
@@ -33,9 +33,9 @@ export async function InstagramStrip() {
           </a>
         </div>
 
-        {/* Six posts (Behold's free-plan cap): two rows of three on phones,
-            one row of six from tablet up. */}
-        <ul className="mt-6 grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6">
+        {/* Six posts (Behold's free-plan cap) as two rows of three at every
+            width. max-w-5xl lines the edges up with Music just above. */}
+        <ul className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
           {posts.map((post) => (
             <li key={post.id}>
               <a
@@ -49,7 +49,7 @@ export async function InstagramStrip() {
                 <img
                   src={post.src}
                   srcSet={post.srcSet || undefined}
-                  sizes="(max-width: 767px) 33vw, (max-width: 72rem) 17vw, 12rem"
+                  sizes="(max-width: 64rem) 33vw, 21rem"
                   alt=""
                   loading="lazy"
                   decoding="async"
