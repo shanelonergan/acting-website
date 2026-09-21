@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useDebugMode } from "@/lib/use-debug-mode";
 import { HERO_SCRUB_SECONDS } from "@/lib/motion";
+import { BulbWord } from "@/components/BulbWord";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -91,7 +92,7 @@ const PANEL_TRAVEL = 0.78;
  * scrubs against scroll position, so they read as the percentages in the
  * brief's timeline table.
  */
-function buildTimeline(els: RevealEls) {
+function buildTimeline(els: RevealEls, isMobile: boolean) {
   // Deliberately NOT given a `scrollTrigger` here: passing an existing
   // ScrollTrigger instance through timeline vars makes GSAP build a second,
   // duplicate trigger from it. The caller attaches this timeline via
@@ -126,9 +127,15 @@ function buildTimeline(els: RevealEls) {
   // distance that edge retreats, so the gap between "Shane" and "Lonergan"
   // always matches the gap between the panels. Function-based values plus
   // invalidateOnRefresh keep this correct across viewport resizes.
-  const travel = () => els.stage.clientWidth * PANEL_WIDTH * PANEL_TRAVEL;
-  tl.to(els.nameL, { x: () => -travel(), duration: 0.5, ease: "sine.inOut" }, 0.15);
-  tl.to(els.nameR, { x: () => travel(), duration: 0.5, ease: "sine.inOut" }, 0.15);
+  //
+  // Not on phones: there the words are stacked and nearly full width, so
+  // any travel would push them off the screen edges at once. They go dark
+  // instead (below) — the house lights dimming before the curtain opens.
+  if (!isMobile) {
+    const travel = () => els.stage.clientWidth * PANEL_WIDTH * PANEL_TRAVEL;
+    tl.to(els.nameL, { x: () => -travel(), duration: 0.5, ease: "sine.inOut" }, 0.15);
+    tl.to(els.nameR, { x: () => travel(), duration: 0.5, ease: "sine.inOut" }, 0.15);
+  }
 
   // 15–30%, sustained through the reveal: the inner-edge glow rises, riding
   // the retreating panels rather than the seam.
@@ -149,14 +156,22 @@ function buildTimeline(els: RevealEls) {
 
   // 26–38%: the names fade out well before they could touch or clip an edge.
   //
-  // The 38% end is geometry, not taste. Both the type size (6.4vw) and the
-  // travel distance (39.8vw) scale with viewport width, so the ratio between
-  // them is width-independent: the longer half ("Lonergan") still has ~55% of
-  // its travel left when it reaches the screen edge, which happens at ~41.5%
-  // progress. Finishing the fade at 38% keeps a margin under that at every
-  // width the clamp() leaves in vw territory. If the type size or PANEL_TRAVEL
-  // changes, re-derive this number — don't nudge it by eye.
-  tl.to([els.nameL, els.nameR], { opacity: 0, duration: 0.12 }, 0.26);
+  // The 38% end is geometry, not taste. Both the name's size (sized off a
+  // 6.4vw em) and the travel distance (39.8vw) scale with viewport width, so
+  // the ratio between them is width-independent: the longer half
+  // ("Lonergan", 4.3em as set text) still has ~55% of its travel left when
+  // it reaches the screen edge, which happens at ~41.5% progress. Finishing
+  // the fade at 38% keeps a margin under that at every width the clamp()
+  // leaves in vw territory. The bulb LONERGAN is drawn 4.25em wide, just
+  // inside that, so the derivation stands. If the name's size or
+  // PANEL_TRAVEL changes, re-derive this number — don't nudge it by eye.
+  //
+  // Phones: 2–14%, as the seam starts to draw, since the names don't travel.
+  if (isMobile) {
+    tl.to([els.nameL, els.nameR], { opacity: 0, duration: 0.12 }, 0.02);
+  } else {
+    tl.to([els.nameL, els.nameR], { opacity: 0, duration: 0.12 }, 0.26);
+  }
 
   // 35–85%: the photograph resolves from black with a slow push-in.
   tl.to(els.dark, { opacity: 0, duration: 0.5, ease: "power3.out" }, 0.35);
@@ -285,7 +300,7 @@ export function Reveal({ name, tagline, media, credit, framing }: RevealProps) {
             scrub: HERO_SCRUB_SECONDS,
             markers,
             invalidateOnRefresh: true,
-            animation: buildTimeline(els),
+            animation: buildTimeline(els, isMobile),
             onUpdate: (self) => setDebugPct(Math.round(self.progress * 100)),
           });
         },
@@ -414,25 +429,44 @@ export function Reveal({ name, tagline, media, credit, framing }: RevealProps) {
         />
 
         {/*
-          The split name is a presentational duplicate of the real <h1>
-          below, so it's hidden from assistive tech and search engines —
-          otherwise "Shane Lonergan" would be announced/indexed twice.
-          Each half is half the stage wide, padded a fifth of an em toward
-          center, so the gap between them lands exactly on the seam
-          regardless of font metrics — never a single string clipped in half.
+          The split name, spelled in marquee bulbs, is a presentational
+          duplicate of the real <h1> below, so it's hidden from assistive
+          tech and search engines — otherwise "Shane Lonergan" would be
+          announced/indexed twice.
+
+          From md up, each half is half the stage wide, padded an eighth of
+          an em toward center, so the gap between them lands exactly on the
+          seam — never a single drawing clipped in half. The em is the old
+          text size, clamp(24px, 6.4vw, 88px), and the bulb words are sized
+          against it: LONERGAN's traced outline is 4.25em wide (716.6 of the
+          SVG's 724.6 units), just under the 4.3em the set text measured, so
+          the fade timing derived in buildTimeline still holds. That makes
+          the SVG 132.6 × 4.25 / 716.6 = 0.786em tall.
+
+          Below md that size would shrink the bulbs to under a pixel, so the
+          words stack instead, LONERGAN 86vw wide (SVG height 15.9vw), and
+          fade before the curtain parts (see buildTimeline).
         */}
         <div aria-hidden className="absolute inset-0 z-[8] motion-reduce:hidden">
           <span
             ref={nameLRef}
-            className="absolute top-1/2 left-0 w-1/2 -translate-y-1/2 pr-[0.125em] text-right text-[clamp(24px,6.4vw,88px)] leading-none font-medium tracking-[-0.02em] whitespace-nowrap"
+            className="absolute top-1/2 left-0 flex w-full -translate-y-full justify-center pb-[1.1vw] text-[clamp(24px,6.4vw,88px)] md:w-1/2 md:-translate-y-1/2 md:justify-end md:pr-[0.125em] md:pb-0"
           >
-            {first}
+            <BulbWord
+              id="hero-name-first"
+              word={first}
+              className="h-[15.9vw] w-auto shrink-0 md:h-[clamp(18.87px,5.033vw,69.2px)]"
+            />
           </span>
           <span
             ref={nameRRef}
-            className="absolute top-1/2 left-1/2 w-1/2 -translate-y-1/2 pl-[0.125em] text-[clamp(24px,6.4vw,88px)] leading-none font-medium tracking-[-0.02em] whitespace-nowrap"
+            className="absolute top-1/2 left-0 flex w-full justify-center pt-[1.1vw] text-[clamp(24px,6.4vw,88px)] md:left-1/2 md:w-1/2 md:-translate-y-1/2 md:justify-start md:pt-0 md:pl-[0.125em]"
           >
-            {rest}
+            <BulbWord
+              id="hero-name-rest"
+              word={rest}
+              className="h-[15.9vw] w-auto shrink-0 md:h-[clamp(18.87px,5.033vw,69.2px)]"
+            />
           </span>
         </div>
 
