@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { channelLine, type PlacedLetter } from "@/lib/bulb-font";
+import { BULB_SIGN, BULB_SIGN_PAD, bulbSignLayout, type PlacedLetter } from "@/lib/bulb-font";
 
 /**
  * One word spelled in marquee bulbs: static yellow bulbs, each letter traced
@@ -10,24 +10,17 @@ import { channelLine, type PlacedLetter } from "@/lib/bulb-font";
  * the SVG is hidden from assistive tech.
  */
 
-const BULB = "#ffd04a";
-const PITCH = 12.5;
-const R = PITCH * 0.26;
-const HALO = { r: R * 2.1, opacity: 0.14 };
-
-/** Width of the invisible letter body the line traces around the bulbs. */
-const BODY = 21;
-/** The traced line, and how far its glow spreads either side. */
-const LINE = 1.8;
-const GLOW = 4;
+// The look is shared with the favicon (scripts/make-favicon.mts); see
+// BULB_SIGN in lib/bulb-font.ts.
+const { color: BULB, bulbR: R, body: BODY, line: LINE, glow: GLOW } = BULB_SIGN;
+const HALO = { r: R * BULB_SIGN.halo.scale, opacity: BULB_SIGN.halo.opacity };
 
 /**
- * Everything drawn sits within this distance of a letter's skeleton, and the
- * viewBox is the skeleton plus PAD on every side: 132.6 units tall, with the
- * traced line's outer edge 4 units in from each side. Callers sizing the SVG
- * work from those numbers (see Reveal.tsx).
+ * The viewBox is the skeleton plus PAD on every side: 132.6 units tall, with
+ * the traced line's outer edge 4 units in from each side. Callers sizing the
+ * SVG work from those numbers (see Reveal.tsx).
  */
-const PAD = BODY / 2 + LINE + GLOW;
+const PAD = BULB_SIGN_PAD;
 
 type Placed = PlacedLetter & { dx: number };
 
@@ -36,7 +29,7 @@ const layouts = new Map<string, { letters: Placed[]; width: number }>();
 function layoutFor(word: string) {
   let layout = layouts.get(word);
   if (!layout) {
-    const { letters, width } = channelLine(word, { pitch: PITCH, gap: 34, wordGap: 72, body: BODY });
+    const { letters, width } = bulbSignLayout(word);
     layout = { letters: letters.map((l) => ({ ...l, dx: l.x })), width };
     layouts.set(word, layout);
   }

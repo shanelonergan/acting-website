@@ -74,7 +74,7 @@ Credits, training, skills, vitals and the resume PDF now come from Shane's AEA r
 ## Architecture notes
 
 - **`components/Reveal.tsx`** — the entire opening sequence. Self-contained; a `<video>` slots into its media wrapper without restructuring. The animation maths is commented at each call site; the name-fade timing in particular is *derived from geometry*, not taste — read the comment before changing the name's size or `PANEL_TRAVEL`.
-- **`components/BulbWord.tsx` + `lib/bulb-font.ts`** — the hero name as a marquee sign. The alphabet is hand-drawn as single-stroke centrelines, covering only the letters in the name, so a different name needs new glyphs. Bulb coordinates are rounded so server and client markup match.
+- **`components/BulbWord.tsx` + `lib/bulb-font.ts`** — the hero name as a marquee sign. The alphabet is hand-drawn as single-stroke centrelines, covering only the letters in the name, so a different name needs new glyphs. Bulb coordinates are rounded so server and client markup match. The favicon (`app/favicon.ico`, `app/apple-icon.png`) is an S in the same lettering, drawn heavier for small sizes; after changing the letters or `BULB_SIGN`, regenerate it with `node scripts/make-favicon.mts` (needs `rsvg-convert`, from `brew install librsvg`).
 - **`lib/productions.ts`** — all date classification, grouping, and formatting, as pure functions.
 - **`components/Section.tsx` + `.enter` in `globals.css`** — the one transition language used by every section.
 - **Two scrubbed timelines only**: the hero and the Contact bookend. Everything else is a CSS transition.

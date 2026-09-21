@@ -295,3 +295,33 @@ export function channelLine(
   }
   return { letters, width: right };
 }
+
+/**
+ * The hero's bulb-sign look: yellow bulbs with a faint halo, each letter
+ * traced by one thin line in the same yellow with the same glow. Shared by
+ * components/BulbWord.tsx and the favicon generator (scripts/make-favicon.mts)
+ * so the two can't drift. Units are the alphabet's (cap height 100).
+ */
+export const BULB_SIGN = {
+  color: "#ffd04a",
+  pitch: 12.5,
+  bulbR: 12.5 * 0.26,
+  /** Halo radius as a multiple of the bulb's, and its opacity (shared by the line's glow). */
+  halo: { scale: 2.1, opacity: 0.14 },
+  /** Width of the invisible letter body the line traces around the bulbs. */
+  body: 21,
+  /** The traced line, and how far its glow spreads either side. */
+  line: 1.8,
+  glow: 4,
+  gap: 34,
+  wordGap: 72,
+} as const;
+
+/** Everything drawn sits within this distance of a letter's skeleton. */
+export const BULB_SIGN_PAD = BULB_SIGN.body / 2 + BULB_SIGN.line + BULB_SIGN.glow;
+
+/** A word laid out in the bulb-sign style. */
+export function bulbSignLayout(word: string) {
+  const { pitch, gap, wordGap, body } = BULB_SIGN;
+  return channelLine(word, { pitch, gap, wordGap, body });
+}
