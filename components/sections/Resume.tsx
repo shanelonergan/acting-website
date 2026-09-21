@@ -47,14 +47,19 @@ export function Resume() {
               {group.items.map((p) => {
                 const year = formatYear(p);
                 return (
+                  // Three equal columns rather than one sized to its content:
+                  // every row is its own grid, so an `auto` column would size
+                  // to that row's company name and shift the role column row
+                  // by row. Equal thirds keep all three aligned down the page,
+                  // like a printed theatre resume.
                   <li
                     key={productionKey(p)}
-                    className="grid grid-cols-1 gap-x-8 gap-y-1 border-t border-fg/10 py-5 sm:grid-cols-[1fr_1fr_auto]"
+                    className="grid grid-cols-1 gap-x-8 gap-y-1 border-t border-fg/10 py-5 sm:grid-cols-3"
                   >
                     <div>
                       <span className="font-medium">{p.title}</span>
                     </div>
-                    <div className="text-fg-muted">
+                    <div className="text-fg-muted sm:text-center">
                       {p.role}
                       {p.understudy ? ` (${p.understudy})` : ""}
                     </div>
