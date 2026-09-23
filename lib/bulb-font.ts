@@ -8,7 +8,7 @@
  * Given a `body` width (see channelLine), three letters are refitted to it
  * as block letters: N's diagonal meets the stem tops exactly, A becomes
  * straight-legged with a flat top, and R's foot is cut flat on the baseline.
- * The hero's bulb name (components/BulbWord.tsx) always passes one.
+ * components/BulbWord.tsx always passes one.
  *
  * Units: a cap height of 100, y pointing down. Arc angles are degrees in
  * screen space (0 = right, 90 = down, 180 = left, 270 = up), and an arc runs
@@ -298,9 +298,8 @@ export function channelLine(
 
 /**
  * The hero's bulb-sign look: yellow bulbs with a faint halo, each letter
- * traced by one thin line in the same yellow with the same glow. Shared by
- * components/BulbWord.tsx and the favicon generator (scripts/make-favicon.mts)
- * so the two can't drift. Units are the alphabet's (cap height 100).
+ * traced by one thin line in the same yellow with the same glow, as drawn by
+ * components/BulbWord.tsx. Units are the alphabet's (cap height 100).
  */
 export const BULB_SIGN = {
   color: "#ffd04a",

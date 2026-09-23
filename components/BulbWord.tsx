@@ -8,17 +8,20 @@ import { BULB_SIGN, BULB_SIGN_PAD, bulbSignLayout, type PlacedLetter } from "@/l
  *
  * Decorative only — the hero renders the real name as text elsewhere — so
  * the SVG is hidden from assistive tech.
+ *
+ * Not used anywhere at the moment: it spelled the hero name for a while and
+ * came off as too much. Kept to bring back later; commit 9590903 shows how
+ * Reveal.tsx sized it, stacked it on phones and retimed the name fade.
  */
 
-// The look is shared with the favicon (scripts/make-favicon.mts); see
-// BULB_SIGN in lib/bulb-font.ts.
+// The look lives in BULB_SIGN in lib/bulb-font.ts.
 const { color: BULB, bulbR: R, body: BODY, line: LINE, glow: GLOW } = BULB_SIGN;
 const HALO = { r: R * BULB_SIGN.halo.scale, opacity: BULB_SIGN.halo.opacity };
 
 /**
  * The viewBox is the skeleton plus PAD on every side: 132.6 units tall, with
  * the traced line's outer edge 4 units in from each side. Callers sizing the
- * SVG work from those numbers (see Reveal.tsx).
+ * SVG work from those numbers.
  */
 const PAD = BULB_SIGN_PAD;
 
